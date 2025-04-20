@@ -1,0 +1,124 @@
+:root {
+    --primary-color: #4caf50;
+    --primary-hover: #45a049;
+    --text-color: #333;
+    --bg-color: #f9f9f9;
+    --border-color: #ddd;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--bg-color);
+    padding: 20px;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px var(--shadow-color);
+    padding: 30px;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: var(--primary-color);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+input, select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+input[type="file"] {
+    padding: 8px;
+}
+
+.submit-btn {
+    display: block;
+    width: 100%;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 12px;
+    font-size: 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.submit-btn:hover {
+    background-color: var(--primary-hover);
+}
+
+.hidden {
+    display: none;
+}
+
+#loading {
+    text-align: center;
+    margin: 30px 0;
+}
+
+.loader {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid var(--primary-color);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 2s linear infinite;
+    margin: 0 auto 15px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+#recipe-result {
+    margin-top: 30px;
+    padding: 20px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: #f9fff9;
+}
+
+#recipe-content {
+    white-space: pre-line;
+    line-height: 1.8;
+}
+
+/* Responsivt design */
+@media (max-width: 600px) {
+    .container {
+        padding: 15px;
+    }
+    
+    body {
+        padding: 10px;
+    }
+} 

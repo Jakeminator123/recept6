@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Longevity Receptgenerator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Generera Longevity-recept 🍽️</h1>
+        
+        <form id="recipe-form">
+            <div class="form-group">
+                <label for="choice">Välj datakälla:</label>
+                <select id="choice" name="choice" required>
+                    <option value="1">Inventarielista (.txt)</option>
+                    <option value="2">Bild på kylskåpet (.jpg/.png)</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="ingredients-file">Ladda upp fil:</label>
+                <input type="file" id="ingredients-file" name="file" accept=".txt,.jpg,.jpeg,.png">
+            </div>
+            
+            <div class="form-group">
+                <label for="difficulty">Svårighetsgrad:</label>
+                <select id="difficulty" name="difficulty" required>
+                    <option value="enkel">Enkel</option>
+                    <option value="medel">Medel</option>
+                    <option value="svår">Svår</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="meal-type">Måltid:</label>
+                <select id="meal-type" name="meal_type" required>
+                    <option value="frukost">Frukost</option>
+                    <option value="lunch">Lunch</option>
+                    <option value="middag">Middag</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="num-people">Antal personer:</label>
+                <input type="number" id="num-people" name="num_people" min="1" max="12" value="4" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="cuisine-pref">Föredraget kök (valfritt):</label>
+                <input type="text" id="cuisine-pref" name="cuisine_pref" placeholder="t.ex. medelhavskost, asiatiskt">
+            </div>
+            
+            <div class="form-group">
+                <label for="dietary-pref">Kostpreferenser (valfritt):</label>
+                <input type="text" id="dietary-pref" name="dietary_pref" placeholder="t.ex. vegetariskt, veganskt, glutenfritt">
+            </div>
+            
+            <button type="submit" class="submit-btn">Generera recept</button>
+        </form>
+        
+        <div id="loading" class="hidden">
+            <div class="loader"></div>
+            <p>Genererar recept...</p>
+        </div>
+        
+        <div id="recipe-result" class="hidden">
+            <h2>Ditt recept</h2>
+            <div id="recipe-content"></div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html> 
