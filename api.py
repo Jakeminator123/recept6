@@ -1,8 +1,10 @@
 import os
 import base64
 from typing import Optional
-from fastapi import FastAPI, File, Form, UploadFile, HTTPException
+from fastapi import FastAPI, File, Form, UploadFile, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse, FileResponse
 from openai import OpenAI
 import uvicorn
 from dotenv import load_dotenv
@@ -21,14 +23,30 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Montera statiska filer
+app.mount("/static", StaticFiles(directory="."), name="static")
+
 # Konfigurera OpenAI API-klient
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 if not os.getenv("OPENAI_API_KEY"):
     print("Varning: OPENAI_API_KEY miljövariabel är inte inställd")
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 async def root():
-    return {"message": "Välkommen till Longevity Recept API"}
+    try:
+        with open("index.html", "r", encoding="utf-8") as f:
+            html_content = f.read()
+        return HTMLResponse(content=html_content)
+    except Exception as e:
+        return {"message": f"Kunde inte läsa index.html: {str(e)}"}
+
+@app.get("/styles.css")
+async def get_css():
+    return FileResponse("styles.css", media_type="text/css")
+
+@app.get("/script.js")
+async def get_js():
+    return FileResponse("script.js", media_type="application/javascript")
 
 @app.post("/generate")
 async def generate_recipe(

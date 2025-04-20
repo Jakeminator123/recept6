@@ -4,14 +4,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const recipeResult = document.getElementById('recipe-result');
     const recipeContent = document.getElementById('recipe-content');
     
-    // Kontrollera om vi kör lokalt eller på en produktionsserver
-    const isLocalhost = window.location.hostname === 'localhost' || 
-                         window.location.hostname === '127.0.0.1';
-    
-    // Välj API URL baserat på miljö
-    const API_URL = isLocalhost 
-        ? 'http://localhost:8000/generate'  // Lokal utvecklingsmiljö
-        : 'https://longevity-recept-api.onrender.com/generate'; // Produktion
+    // Använd relativ sökväg för API-anrop oavsett miljö
+    const API_URL = '/generate';
     
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
