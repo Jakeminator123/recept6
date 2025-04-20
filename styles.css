@@ -1,10 +1,13 @@
 :root {
     --primary-color: #4caf50;
+    --primary-light: #e8f5e9;
     --primary-hover: #45a049;
+    --button-color: #c8e6c9;
+    --button-hover: #a5d6a7;
     --text-color: #333;
-    --bg-color: #f9f9f9;
-    --border-color: #ddd;
-    --shadow-color: rgba(0, 0, 0, 0.1);
+    --bg-color: #fff;
+    --border-color: #e0e0e0;
+    --shadow-color: rgba(0, 0, 0, 0.07);
 }
 
 * {
@@ -14,7 +17,7 @@
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
     line-height: 1.6;
     color: var(--text-color);
     background-color: var(--bg-color);
@@ -25,54 +28,72 @@ body {
     max-width: 800px;
     margin: 0 auto;
     background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px var(--shadow-color);
-    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 6px 16px var(--shadow-color);
+    padding: 40px 30px;
 }
 
 h1 {
     text-align: center;
-    margin-bottom: 30px;
-    color: var(--primary-color);
+    margin-bottom: 40px;
+    color: var(--text-color);
+    font-weight: 500;
 }
 
 .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 24px;
 }
 
 label {
     display: block;
     margin-bottom: 8px;
-    font-weight: 600;
+    font-weight: 400;
+    color: var(--text-color);
 }
 
 input, select {
     width: 100%;
-    padding: 10px;
+    padding: 15px 20px;
     border: 1px solid var(--border-color);
-    border-radius: 4px;
-    font-size: 1rem;
+    border-radius: 100px;
+    font-size: 16px;
+    color: var(--text-color);
+    background-color: white;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+}
+
+input:focus, select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
 }
 
 input[type="file"] {
-    padding: 8px;
+    padding: 12px 15px;
 }
 
 .submit-btn {
     display: block;
-    width: 100%;
-    background-color: var(--primary-color);
-    color: white;
+    width: 50%;
+    margin: 40px auto 0;
+    background-color: var(--button-color);
+    color: var(--text-color);
     border: none;
-    padding: 12px;
-    font-size: 1rem;
-    border-radius: 4px;
+    padding: 15px 20px;
+    font-size: 18px;
+    font-weight: 500;
+    border-radius: 100px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: background-color 0.2s, transform 0.1s;
+    text-align: center;
 }
 
 .submit-btn:hover {
-    background-color: var(--primary-hover);
+    background-color: var(--button-hover);
+}
+
+.submit-btn:active {
+    transform: translateY(1px);
 }
 
 .hidden {
@@ -81,7 +102,7 @@ input[type="file"] {
 
 #loading {
     text-align: center;
-    margin: 30px 0;
+    margin: 40px 0;
 }
 
 .loader {
@@ -100,11 +121,30 @@ input[type="file"] {
 }
 
 #recipe-result {
-    margin-top: 30px;
-    padding: 20px;
+    margin-top: 40px;
+    padding: 30px;
     border: 1px solid var(--border-color);
-    border-radius: 4px;
-    background-color: #f9fff9;
+    border-radius: 16px;
+    background-color: var(--primary-light);
+}
+
+#recipe-result h2 {
+    margin-bottom: 20px;
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+.recipe-section {
+    margin-bottom: 20px;
+}
+
+.section-title {
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.section-content {
+    line-height: 1.8;
 }
 
 #recipe-content {
@@ -115,10 +155,15 @@ input[type="file"] {
 /* Responsivt design */
 @media (max-width: 600px) {
     .container {
-        padding: 15px;
+        padding: 25px 20px;
+        border-radius: 12px;
     }
     
     body {
         padding: 10px;
+    }
+    
+    .submit-btn {
+        width: 100%;
     }
 } 
