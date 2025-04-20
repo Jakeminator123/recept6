@@ -8,6 +8,16 @@ En Shopify-applikation som genererar hälsosamma "longevity" recept baserat på 
 - Ange måltidstyp, svårighetsgrad och andra preferenser
 - Få ett receptförslag anpassat för långt och hälsosamt liv
 
+## Snabbstart 🚀
+
+För att komma igång snabbt, kör:
+
+```
+python all_in_one.py
+```
+
+Detta startar både API-servern och webbservern, och öppnar webbläsaren automatiskt.
+
 ## Projektstruktur
 
 - `index.html` - Frontend-gränssnitt
@@ -19,44 +29,60 @@ En Shopify-applikation som genererar hälsosamma "longevity" recept baserat på 
 - `preview.html` - Förhandsgranskning av applikationen
 - `serve.py` - Lokal utvecklingsserver
 - `mock_api.js` - Simulerar API-svar för testning utan backend
+- `test_script.py` - Kommandoradsverktyg för att testa API direkt
+- `setup.py` - Hjälpskript för att konfigurera och starta projektet
+- `all_in_one.py` - Kombinerad server som kör både frontend och backend
 
 ## Installation och körning
 
+### Första gången
+
+Kör setup-skriptet för att konfigurera din miljö:
+
+```
+python setup.py
+```
+
+Detta kommer att:
+- Skapa en `.env`-fil för din API-nyckel
+- Installera alla nödvändiga beroenden
+- Skapa testfiler för att testa API:et
+- Hjälpa dig konfigurera din OpenAI API-nyckel
+- Erbjuda att starta alla tjänster
+
 ### Backend (API)
 
-1. Installera beroenden:
-   ```
-   pip install -r requirements.txt
-   ```
+För att endast starta API-servern:
 
-2. Skapa en `.env`-fil baserad på `env.example` och ange din OpenAI API-nyckel:
-   ```
-   cp env.example .env
-   ```
+```
+python api.py
+```
 
-3. Starta API-servern:
-   ```
-   python api.py
-   ```
-   
-   Servern startar på http://localhost:8000
+Servern startar på http://localhost:8000
 
 ### Frontend
 
-Öppna `index.html` i en webbläsare eller ladda upp filerna till en webbserver.
+För att endast starta webbservern:
 
-### Förhandsgranskning
+```
+python serve.py
+```
 
-För att enkelt förhandsvisa hur applikationen kommer att se ut på din Shopify-sida:
+Detta öppnar webbläsaren med förhandsgranskningssidan.
 
-1. Starta den lokala utvecklingsservern:
-   ```
-   python serve.py
-   ```
+### Direkttestning av API
 
-2. Din webbläsare öppnas automatiskt med förhandsgranskningen på http://localhost:8080/preview.html
+För att testa API:et direkt från kommandoraden:
 
-3. **Teståtkomst utan backend**: Förhandsgranskningen använder ett mockup-API så att du kan testa hela flödet utan att behöva starta backend-servern.
+```
+python test_script.py testdata/ingredienser.txt
+```
+
+För att testa med en bild:
+
+```
+python test_script.py "" kylskap.jpg
+```
 
 ## Deployment
 
@@ -66,7 +92,7 @@ För att enkelt förhandsvisa hur applikationen kommer att se ut på din Shopify
 2. Koppla till GitHub-repositoryt
 3. Ange följande inställningar:
    - Runtime: Docker
-   - Environment variables: Lägg till OPENAI_API_KEY
+   - Environment variables: Lägg till `OPENAI_API_KEY`
 
 ### Frontend på Shopify
 
@@ -88,12 +114,4 @@ För att testa frontend utan att behöva köra backend:
 
 ### API-dokumentation
 
-När backend-servern körs, besök `/docs` för fullständig API-dokumentation (genererad av Swagger UI).
-
-## Licensiering
-
-Detta projekt är inte öppen källkod och får endast användas med tillstånd.
-
-## Kontakt
-
-För frågor, kontakta [din e-postadress]. 
+När backend-servern körs, besök `/docs` för fullständig API-dokumentation (genererad av Swagger UI). 

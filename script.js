@@ -4,6 +4,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const recipeResult = document.getElementById('recipe-result');
     const recipeContent = document.getElementById('recipe-content');
     
+    // Kontrollera om vi kör lokalt eller på en produktionsserver
+    const isLocalhost = window.location.hostname === 'localhost' || 
+                         window.location.hostname === '127.0.0.1';
+    
+    // Välj API URL baserat på miljö
+    const API_URL = isLocalhost 
+        ? 'http://localhost:8000/generate'  // Lokal utvecklingsmiljö
+        : 'https://longevity-recept-api.onrender.com/generate'; // Produktion
+    
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -15,8 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const formData = new FormData(form);
         
         try {
-            // Skicka till API (ändra till din verkliga API-slutpunkt på Render)
-            const response = await fetch('https://longevity-recept-api.onrender.com/generate', {
+            // Skicka till API 
+            const response = await fetch(API_URL, {
                 method: 'POST',
                 body: formData,
             });
@@ -69,7 +78,7 @@ function formatRecipe(recipeText) {
     const sections = recipeText.split(/\n(?=\d\))/);
     
     // Formatera och sammanfoga sektionerna
-    return sections.map((section, index) => {
+    return sections.map((section) => {
         const lines = section.split('\n');
         const title = lines[0];
         const content = lines.slice(1).join('\n');
