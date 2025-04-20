@@ -67,7 +67,7 @@ def start_api_server():
         from fastapi import FastAPI, File, Form, UploadFile, HTTPException
         from fastapi.middleware.cors import CORSMiddleware
         import uvicorn
-        import openai
+        from openai import OpenAI
     except ImportError:
         print("❌ Nödvändiga bibliotek saknas för API-servern. Kör 'pip install -r requirements.txt'")
         sys.exit(1)
@@ -84,8 +84,8 @@ def start_api_server():
         allow_headers=["*"],
     )
     
-    # Konfigurera OpenAI API-nyckel
-    openai.api_key = os.getenv("OPENAI_API_KEY")
+    # Konfigurera OpenAI API-klient
+    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     
     # Hemstartsida
     @app.get("/")
@@ -117,26 +117,37 @@ def start_api_server():
                     
             elif choice == "2":  # Bild på kylskåp
                 # Kontrollera att API-nyckeln är satt
-                if not openai.api_key:
+                if not os.getenv("OPENAI_API_KEY"):
                     raise HTTPException(status_code=500, detail="OpenAI API-nyckel saknas")
                 
                 # Konvertera bilddata till base64
                 base64_image = base64.b64encode(file_content).decode('utf-8')
                 
                 # Analysera bild med OpenAI
-                response = openai.ChatCompletion.create(
-                    model="gpt-4",
+                response = client.chat.completions.create(
+                    model="gpt-4o",
                     messages=[
                         {
                             "role": "user",
-                            "content": "Detta är en bild av mitt kylskåp. Lista alla ingredienser och råvaror du kan identifiera i bilden. Var specifik och detaljerad. Lista råvarorna på svenska."
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Detta är en bild av mitt kylskåp. Lista alla ingredienser och råvaror du kan identifiera i bilden. Var specifik och detaljerad. Lista råvarorna på svenska."
+                                },
+                                {
+                                    "type": "image_url",
+                                    "image_url": {
+                                        "url": f"data:image/jpeg;base64,{base64_image}"
+                                    }
+                                }
+                            ]
                         }
                     ],
-                    image=base64_image
+                    max_tokens=500
                 )
                 
                 # Extrahera listan med råvaror från svaret
-                varulista = response["choices"][0]["message"]["content"]
+                varulista = response.choices[0].message.content
             
             else:
                 raise HTTPException(status_code=400, detail="Ogiltigt val")
@@ -183,13 +194,13 @@ Lista över tillgängliga varor:
 """
 
             # Skicka frågan till modellen
-            response = openai.ChatCompletion.create(
-                model="gpt-4",
+            response = client.chat.completions.create(
+                model="gpt-4-turbo",
                 messages=[{"role": "user", "content": prompt}]
             )
 
             # Hämta och returnera svaret
-            recipe = response["choices"][0]["message"]["content"]
+            recipe = response.choices[0].message.content
             
             return {"recipe": recipe}
             
@@ -262,4 +273,4 @@ if __name__ == "__main__":
         main()
     except KeyboardInterrupt:
         print("\n🛑 Avslutar Longevity Receptgenerator...")
-        sys.exit(0) 
+        sys.exit(0)

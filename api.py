@@ -1,9 +1,9 @@
-import os
+mport os
 import base64
 from typing import Optional
 from fastapi import FastAPI, File, Form, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-import openai
+from openai import OpenAI
 import uvicorn
 from dotenv import load_dotenv
 
@@ -21,9 +21,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Konfigurera OpenAI API-nyckel
-openai.api_key = os.getenv("OPENAI_API_KEY")
-if not openai.api_key:
+# Konfigurera OpenAI API-klient
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+if not os.getenv("OPENAI_API_KEY"):
     print("Varning: OPENAI_API_KEY miljövariabel är inte inställd")
 
 @app.get("/")
@@ -68,7 +68,7 @@ async def generate_recipe(
             base64_image = base64.b64encode(file_content).decode('utf-8')
             
             # Analysera bild med OpenAI
-            response = openai.ChatCompletion.create(
+            response = client.chat.completions.create(
                 model="gpt-4o",
                 messages=[
                     {
@@ -86,11 +86,12 @@ async def generate_recipe(
                             }
                         ]
                     }
-                ]
+                ],
+                max_tokens=500
             )
             
             # Extrahera listan med råvaror från svaret
-            varulista = response["choices"][0]["message"]["content"]
+            varulista = response.choices[0].message.content
         
         else:
             raise HTTPException(status_code=400, detail="Ogiltigt val")
@@ -137,13 +138,13 @@ Lista över tillgängliga varor:
 """
 
         # Skicka frågan till modellen
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-4-turbo",  # använder GPT-4 för bättre resultat
             messages=[{"role": "user", "content": prompt}]
         )
 
         # Hämta och returnera svaret
-        recipe = response["choices"][0]["message"]["content"]
+        recipe = response.choices[0].message.content
         
         return {"recipe": recipe}
         
@@ -153,4 +154,4 @@ Lista över tillgängliga varor:
 if __name__ == "__main__":
     # Starta API-servern
     port = int(os.getenv("PORT", 8000))
-    uvicorn.run("api:app", host="0.0.0.0", port=port) 
+    uvicorn.run("api:app", host="0.0.0.0", port=port)
