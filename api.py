@@ -1,4 +1,4 @@
-mport os
+import os
 import base64
 from typing import Optional
 from fastapi import FastAPI, File, Form, UploadFile, HTTPException
