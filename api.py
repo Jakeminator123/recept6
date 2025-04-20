@@ -1,5 +1,6 @@
 import os
 import base64
+import traceback
 from typing import Optional
 from fastapi import FastAPI, File, Form, UploadFile, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -27,9 +28,12 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="."), name="static")
 
 # Konfigurera OpenAI API-klient
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-if not os.getenv("OPENAI_API_KEY"):
+api_key = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=api_key)
+if not api_key:
     print("Varning: OPENAI_API_KEY miljövariabel är inte inställd")
+else:
+    print(f"API-nyckel hittad: {api_key[:5]}...{api_key[-4:]}")
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
@@ -70,47 +74,74 @@ async def generate_recipe(
     - dietary_pref: Kostpreferenser (valfritt)
     """
     try:
+        print(f"Begäran mottagen: choice={choice}, filnamn={file.filename}, filstorlek={file.size if hasattr(file, 'size') else 'okänd'}")
+        
         # Läs filinnehåll
         varulista = ""
         file_content = await file.read()
+        print(f"Fil läst, storlek: {len(file_content)} bytes")
         
         # Behandla baserat på val
         if choice == "1":  # Textfil med inventarielista
             try:
                 varulista = file_content.decode("utf-8")
+                print(f"Textfil avkodad, längd: {len(varulista)} tecken")
             except UnicodeDecodeError:
+                print("Fel vid avkodning av textfil")
                 raise HTTPException(status_code=400, detail="Filen är inte en giltig textfil")
                 
         elif choice == "2":  # Bild på kylskåp
-            # Konvertera bilddata till base64
-            base64_image = base64.b64encode(file_content).decode('utf-8')
-            
-            # Analysera bild med OpenAI
-            response = client.chat.completions.create(
-                model="gpt-4o",
-                messages=[
-                    {
-                        "role": "user",
-                        "content": [
+            try:
+                # Konvertera bilddata till base64
+                base64_image = base64.b64encode(file_content).decode('utf-8')
+                print(f"Bild kodad till base64, längd: {len(base64_image)} tecken")
+                
+                # Verifiera att API-nyckeln är inställd
+                if not api_key:
+                    print("Saknar API-nyckel")
+                    raise HTTPException(status_code=500, detail="OpenAI API-nyckel saknas")
+                
+                # Skriv ut information om bilden
+                print(f"Skickar bild till OpenAI, filtyp: {file.content_type}, bildstorlek: {len(file_content)}")
+                
+                # Analysera bild med OpenAI
+                try:
+                    response = client.chat.completions.create(
+                        model="gpt-4o",
+                        messages=[
                             {
-                                "type": "text", 
-                                "text": "Detta är en bild av mitt kylskåp. Lista alla ingredienser och råvaror du kan identifiera i bilden. Var specifik och detaljerad. Lista råvarorna på svenska."
-                            },
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:image/jpeg;base64,{base64_image}"
-                                }
+                                "role": "user",
+                                "content": [
+                                    {
+                                        "type": "text", 
+                                        "text": "Detta är en bild av mitt kylskåp. Lista alla ingredienser och råvaror du kan identifiera i bilden. Var specifik och detaljerad. Lista råvarorna på svenska."
+                                    },
+                                    {
+                                        "type": "image_url",
+                                        "image_url": {
+                                            "url": f"data:image/jpeg;base64,{base64_image}"
+                                        }
+                                    }
+                                ]
                             }
-                        ]
-                    }
-                ],
-                max_tokens=500
-            )
+                        ],
+                        max_tokens=500
+                    )
+                    
+                    # Extrahera listan med råvaror från svaret
+                    varulista = response.choices[0].message.content
+                    print(f"Bilden analyserad framgångsrikt, svarslängd: {len(varulista)} tecken")
+                    
+                except Exception as api_error:
+                    print(f"OpenAI API-fel: {str(api_error)}")
+                    error_details = str(api_error)
+                    traceback.print_exc()
+                    raise HTTPException(status_code=500, detail=f"Fel vid bildanalys: {error_details}")
             
-            # Extrahera listan med råvaror från svaret
-            varulista = response.choices[0].message.content
-        
+            except Exception as img_error:
+                print(f"Bildhanteringsfel: {str(img_error)}")
+                traceback.print_exc()
+                raise HTTPException(status_code=500, detail=f"Fel vid bildhantering: {str(img_error)}")
         else:
             raise HTTPException(status_code=400, detail="Ogiltigt val")
 
@@ -156,6 +187,7 @@ Lista över tillgängliga varor:
 """
 
         # Skicka frågan till modellen
+        print("Skickar prompt till GPT-4...")
         response = client.chat.completions.create(
             model="gpt-4-turbo",  # använder GPT-4 för bättre resultat
             messages=[{"role": "user", "content": prompt}]
@@ -163,13 +195,17 @@ Lista över tillgängliga varor:
 
         # Hämta och returnera svaret
         recipe = response.choices[0].message.content
+        print(f"Recept genererat framgångsrikt, längd: {len(recipe)} tecken")
         
         return {"recipe": recipe}
         
     except Exception as e:
+        print(f"Oväntat fel: {str(e)}")
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     # Starta API-servern
     port = int(os.getenv("PORT", 8000))
+    print(f"Startar server på port {port}...")
     uvicorn.run("api:app", host="0.0.0.0", port=port)
