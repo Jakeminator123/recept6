@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadLibraryRecipes() {
         try {
             // Använd absolut URL till API-servern
-            const response = await fetch('http://localhost:8000/api/library/recipes');
+            const response = await fetch('/api/library/recipes');
             
             if (!response.ok) {
                 throw new Error(`Server svarade med statuskod: ${response.status}`);
@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function showRecipeDetails(recipeId, filename) {
         try {
             // Använd absolut URL till API-servern
-            const response = await fetch(`http://localhost:8000/api/library/recipes/${recipeId}`);
+            const response = await fetch(`/api/library/recipes/${recipeId}`);
             
             if (!response.ok) {
                 throw new Error(`Server svarade med statuskod: ${response.status}`);
