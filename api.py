@@ -1,14 +1,15 @@
 import os
 import base64
 import traceback
-from typing import Optional
+from typing import Optional, List
 from fastapi import FastAPI, File, Form, UploadFile, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 from openai import OpenAI
 import uvicorn
 from dotenv import load_dotenv
+import pathlib
 
 # Ladda miljövariabler från .env-fil
 load_dotenv()
@@ -201,6 +202,92 @@ Lista över tillgängliga varor:
         
     except Exception as e:
         print(f"Oväntat fel: {str(e)}")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/recipes.html")
+async def get_recipes_page():
+    try:
+        with open("recipes.html", "r", encoding="utf-8") as f:
+            html_content = f.read()
+        return HTMLResponse(content=html_content)
+    except Exception as e:
+        return {"message": f"Kunde inte läsa recipes.html: {str(e)}"}
+
+@app.get("/recipes.js")
+async def get_recipes_js():
+    return FileResponse("recipes.js", media_type="application/javascript")
+
+@app.get("/library_browse.html")
+async def get_library_page():
+    try:
+        with open("library_browse.html", "r", encoding="utf-8") as f:
+            html_content = f.read()
+        return HTMLResponse(content=html_content)
+    except Exception as e:
+        return {"message": f"Kunde inte läsa library_browse.html: {str(e)}"}
+
+@app.get("/library_browse.js")
+async def get_library_js():
+    return FileResponse("library_browse.js", media_type="application/javascript")
+
+@app.get("/api/library/recipes")
+async def list_library_recipes() -> List[dict]:
+    """
+    Listar alla recept i biblioteksmappen.
+    """
+    try:
+        recipes_dir = pathlib.Path("recipes_library")
+        if not recipes_dir.exists():
+            return []
+        
+        recipes = []
+        for file in recipes_dir.glob("*.txt"):
+            # Läs första raden som titel
+            try:
+                with open(file, "r", encoding="utf-8") as f:
+                    first_line = f.readline().strip()
+                    title = first_line if first_line else file.stem.replace("_", " ").title()
+            except:
+                title = file.stem.replace("_", " ").title()
+                
+            recipes.append({
+                "id": file.stem,
+                "filename": file.name,
+                "title": title,
+                "size": file.stat().st_size,
+                "date": file.stat().st_mtime
+            })
+            
+        # Sortera efter senast ändrad
+        recipes.sort(key=lambda x: x["date"], reverse=True)
+        return recipes
+    except Exception as e:
+        print(f"Fel vid listning av biblioteksrecept: {str(e)}")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/library/recipes/{recipe_id}")
+async def get_library_recipe(recipe_id: str):
+    """
+    Hämtar ett specifikt recept från biblioteket.
+    """
+    try:
+        filename = f"{recipe_id}.txt"
+        file_path = pathlib.Path("recipes_library") / filename
+        
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail="Receptet hittades inte")
+            
+        return FileResponse(
+            path=str(file_path), 
+            filename=filename,
+            media_type="text/plain; charset=utf-8"
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Fel vid hämtning av biblioteksrecept: {str(e)}")
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 

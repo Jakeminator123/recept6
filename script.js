@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadingIndicator = document.getElementById('loading');
     const recipeResult = document.getElementById('recipe-result');
     const recipeContent = document.getElementById('recipe-content');
+    const saveRecipeBtn = document.getElementById('save-recipe');
     
     // Använd relativ sökväg för API-anrop oavsett miljö
     const API_URL = '/generate';
@@ -34,6 +35,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.recipe) {
                 recipeContent.innerHTML = formatRecipe(data.recipe);
                 recipeResult.classList.remove('hidden');
+                
+                // Spara receptet i sessionStorage för att kunna använda "Spara"-knappen
+                sessionStorage.setItem('currentRecipe', data.recipe);
+                sessionStorage.setItem('recipeMeta', JSON.stringify({
+                    difficulty: formData.get('difficulty'),
+                    mealType: formData.get('meal_type'),
+                    numPeople: formData.get('num_people'),
+                    cuisinePref: formData.get('cuisine_pref') || '',
+                    dietaryPref: formData.get('dietary_pref') || ''
+                }));
             } else {
                 throw new Error('Inget recept i svaret');
             }
@@ -64,6 +75,41 @@ document.addEventListener('DOMContentLoaded', () => {
             fileInput.accept = '.jpg,.jpeg,.png';
         }
     });
+    
+    // Spara recept-funktion
+    if (saveRecipeBtn) {
+        saveRecipeBtn.addEventListener('click', () => {
+            const recipe = sessionStorage.getItem('currentRecipe');
+            const meta = JSON.parse(sessionStorage.getItem('recipeMeta') || '{}');
+            
+            if (!recipe) {
+                alert('Inget recept att spara');
+                return;
+            }
+            
+            // Hämta första rubriken som receptnamn
+            const titleMatch = recipe.match(/1\) Förslag på rätt:([\s\S]*?)(?=\n2\)|\n\n|$)/);
+            const title = titleMatch ? titleMatch[1].trim() : 'Namnlöst recept';
+            
+            // Skapa recept-objekt
+            const recipeObj = {
+                id: Date.now().toString(),
+                title: title,
+                content: recipe,
+                date: new Date().toISOString(),
+                meta: meta
+            };
+            
+            // Hämta befintliga recept från localStorage
+            const existingRecipes = JSON.parse(localStorage.getItem('recipes') || '[]');
+            existingRecipes.push(recipeObj);
+            
+            // Spara uppdaterad receptlista
+            localStorage.setItem('recipes', JSON.stringify(existingRecipes));
+            
+            alert('Receptet har sparats!');
+        });
+    }
 });
 
 // Formatera recepttext för bättre läsbarhet

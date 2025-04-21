@@ -20,8 +20,10 @@ import webbrowser
 import multiprocessing
 import http.server
 import socketserver
+import json
+import traceback
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 from dotenv import load_dotenv
 
 # --------------------------------------------------------
@@ -33,7 +35,7 @@ load_dotenv()
 
 # Konfigurera portar
 API_PORT = int(os.getenv("PORT", 8000))
-WEB_PORT = 8080
+WEB_PORT = 9000
 
 # Kontrollera att OpenAI API-nyckeln är satt
 if not os.getenv("OPENAI_API_KEY"):
@@ -66,6 +68,7 @@ def start_api_server():
         import base64
         from fastapi import FastAPI, File, Form, UploadFile, HTTPException
         from fastapi.middleware.cors import CORSMiddleware
+        from fastapi.responses import FileResponse
         import uvicorn
         from openai import OpenAI
     except ImportError:
@@ -91,6 +94,70 @@ def start_api_server():
     @app.get("/")
     async def root():
         return {"message": "Välkommen till Longevity Recept API"}
+    
+    # Stödja biblioteksmapp
+    recipes_dir = Path(__file__).parent.absolute() / "recipes_library"
+    if not recipes_dir.exists():
+        print(f"📁 Skapar receptbiblioteksmapp: {recipes_dir}")
+        recipes_dir.mkdir(exist_ok=True)
+
+    print(f"📁 Använder receptbiblioteksmapp: {recipes_dir}")
+    # Lista innehållet i mappen för att kontrollera att den hittas
+    print(f"📚 Biblioteksinnehåll: {list(recipes_dir.glob('*.txt'))}")
+    
+    # API-slutpunkt för att lista alla recept i biblioteket
+    @app.get("/api/library/recipes")
+    async def list_library_recipes() -> List[dict]:
+        """Listar alla recept i biblioteksmappen."""
+        try:
+            recipes = []
+            for file in recipes_dir.glob("*.txt"):
+                # Läs första raden som titel
+                try:
+                    with open(file, "r", encoding="utf-8") as f:
+                        first_line = f.readline().strip()
+                        title = first_line if first_line else file.stem.replace("_", " ").title()
+                except:
+                    title = file.stem.replace("_", " ").title()
+                    
+                recipes.append({
+                    "id": file.stem,
+                    "filename": file.name,
+                    "title": title,
+                    "size": file.stat().st_size,
+                    "date": file.stat().st_mtime
+                })
+                
+            # Sortera efter senast ändrad
+            recipes.sort(key=lambda x: x["date"], reverse=True)
+            return recipes
+        except Exception as e:
+            print(f"Fel vid listning av biblioteksrecept: {str(e)}")
+            traceback.print_exc()
+            raise HTTPException(status_code=500, detail=str(e))
+    
+    # API-slutpunkt för att hämta ett specifikt recept
+    @app.get("/api/library/recipes/{recipe_id}")
+    async def get_library_recipe(recipe_id: str):
+        """Hämtar ett specifikt recept från biblioteket."""
+        try:
+            filename = f"{recipe_id}.txt"
+            file_path = recipes_dir / filename
+            
+            if not file_path.exists():
+                raise HTTPException(status_code=404, detail="Receptet hittades inte")
+                
+            return FileResponse(
+                path=str(file_path), 
+                filename=filename,
+                media_type="text/plain; charset=utf-8"
+            )
+        except HTTPException:
+            raise
+        except Exception as e:
+            print(f"Fel vid hämtning av biblioteksrecept: {str(e)}")
+            traceback.print_exc()
+            raise HTTPException(status_code=500, detail=str(e))
     
     # API-slutpunkt för att generera recept
     @app.post("/generate")
@@ -218,14 +285,22 @@ Lista över tillgängliga varor:
 def start_web_server():
     """Starta en enkel HTTP-server för frontend"""
     # Skapa en enkel HTTP-server
-    handler = http.server.SimpleHTTPRequestHandler
+    class CustomHandler(http.server.SimpleHTTPRequestHandler):
+        def do_GET(self):
+            # Omdirigera API-anrop till API-servern
+            if self.path.startswith('/api/'):
+                self.send_response(302)
+                self.send_header('Location', f'http://localhost:{API_PORT}{self.path}')
+                self.end_headers()
+                return
+            return http.server.SimpleHTTPRequestHandler.do_GET(self)
     
     try:
-        with socketserver.TCPServer(("", WEB_PORT), handler) as httpd:
+        with socketserver.TCPServer(("", WEB_PORT), CustomHandler) as httpd:
             print(f"🌐 Webbserver igång på http://localhost:{WEB_PORT}")
             httpd.serve_forever()
     except OSError as e:
-        if e.errno == 98:  # Port används redan
+        if e.errno == 98 or e.errno == 10048:  # Port används redan
             print(f"❌ Port {WEB_PORT} används redan. Välj en annan port.")
         else:
             print(f"❌ Fel vid start av webbserver: {e}")
@@ -235,7 +310,7 @@ def open_browser():
     """Öppna webbläsaren efter en kort fördröjning"""
     time.sleep(2)  # Vänta lite så att servern hinner starta
     print("🔍 Öppnar webbläsare...")
-    webbrowser.open(f"http://localhost:{WEB_PORT}/preview.html")
+    webbrowser.open(f"http://localhost:{WEB_PORT}/index.html")
 
 # --------------------------------------------------------
 # Huvudprogram

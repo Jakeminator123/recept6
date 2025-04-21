@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receptbibliotek - Longevity Receptgenerator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Receptbibliotek 📚</h1>
+        
+        <div class="main-actions">
+            <a href="index.html" class="back-btn">Tillbaka till receptgenerator</a>
+            <a href="recipes.html" class="browse-btn">Mina sparade recept</a>
+        </div>
+        
+        <div id="library-list">
+            <div class="loader"></div>
+            <p>Laddar receptbibliotek...</p>
+        </div>
+        
+        <div id="recipe-details" class="hidden">
+            <h2 id="recipe-title">Receptdetaljer</h2>
+            <div id="recipe-content"></div>
+            <div class="recipe-actions">
+                <button id="download-recipe" class="action-btn">Ladda ner recept</button>
+                <button id="back-to-list" class="secondary-btn">Tillbaka till listan</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="library_browse.js"></script>
+</body>
+</html> 
