@@ -46,4 +46,5 @@ uploads/
 *.png
 *.txt
 !requirements.txt
-!env.example 
+!recipes_library/*.txt
+!env.example
